@@ -1,4 +1,4 @@
-package com.example.SpringSecurity;
+package com.example.SpringSecurity.model;
 
 
 public class Student {
@@ -18,5 +18,13 @@ public class Student {
 
     public String getStudentName() {
         return studentName;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "studentId=" + studentId +
+                ", studentName='" + studentName + '\'' +
+                '}';
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -21,6 +22,7 @@ import static com.example.SpringSecurity.security.ApplicationUserRole.*;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true) // This is used to enable method level security ----> @PreAuthorize("hasRole('ROLE_')") or @PreAuthorize("hasAuthority('permission')") ------> M-2
 public class ApplicationSecurityConfig {
 
      @Bean
@@ -33,10 +35,10 @@ public class ApplicationSecurityConfig {
                          .requestMatchers("/login" , "/register" , "/public/**").permitAll()  // ✅ Public endpoints
                          .requestMatchers("/api/**").hasRole(STUDENT.name())  // ✅ Student role required for APIs
                          .requestMatchers("/admin/**").hasRole(ADMIN.name())  // ✅ Admin role required
-                         .requestMatchers(HttpMethod.DELETE , "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) // Any user with COURSE_WRITE authority can delete
-                         .requestMatchers(HttpMethod.POST , "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) // Any user with COURSE_WRITE authority can post
-                         .requestMatchers(HttpMethod.PUT , "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) // Any user with COURSE_WRITE authority can put
-                         .requestMatchers(HttpMethod.GET , "/management/api/**").hasAnyRole(ADMIN.name() , ADMINTRAINEE.name())  // Admin and Admin Trainee can access management APIs
+//                         .requestMatchers(HttpMethod.DELETE , "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) // Any user with COURSE_WRITE authority can delete
+//                         .requestMatchers(HttpMethod.POST , "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) // Any user with COURSE_WRITE authority can post
+//                         .requestMatchers(HttpMethod.PUT , "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) // Any user with COURSE_WRITE authority can put
+//                         .requestMatchers(HttpMethod.GET , "/management/api/**").hasAnyRole(ADMIN.name() , ADMINTRAINEE.name())  // Admin and Admin Trainee can access management APIs
                          .anyRequest().authenticated()  // Protect all other URLs
                  )
                  .httpBasic(Customizer.withDefaults())  // 🔴 Basic Authentication

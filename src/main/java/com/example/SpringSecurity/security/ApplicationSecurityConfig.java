@@ -37,6 +37,17 @@ public class ApplicationSecurityConfig {
                          .loginPage("/login")  // Custom login page
                          .defaultSuccessUrl("/" , true)  // Redirect to home page after successful login
                          .permitAll()
+                 )
+                 .rememberMe(rememberMe -> rememberMe
+                         .tokenValiditySeconds((int) java.time.Duration.ofDays(21).getSeconds())  // Remember me for 21 days
+                         .key("secureKey")  // Key to encrypt remember me cookie
+                 )
+                 .logout(logout -> logout
+                         .logoutUrl("/logout")  // Custom logout URL
+                         .clearAuthentication(true)  // Clear authentication
+                         .invalidateHttpSession(true)  // Invalidate session
+                         .deleteCookies("JSESSIONID", "remember-me")  // Delete cookies
+                         .logoutSuccessUrl("/login")  // Redirect to login page after logout
                  );
 
 

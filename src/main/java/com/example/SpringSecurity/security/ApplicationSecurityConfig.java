@@ -1,18 +1,18 @@
 package com.example.SpringSecurity.security;
 
+import com.example.SpringSecurity.auth.ApplicationUserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.time.Duration;
 
 import static com.example.SpringSecurity.security.ApplicationUserRole.*;
 
@@ -22,7 +22,17 @@ import static com.example.SpringSecurity.security.ApplicationUserRole.*;
 @EnableGlobalMethodSecurity(prePostEnabled = true) // This is used to enable method level security ----> @PreAuthorize("hasRole('ROLE_')") or @PreAuthorize("hasAuthority('permission')") ------> M-2
 public class ApplicationSecurityConfig {
 
-     @Bean
+    private final PasswordEncoder passwordEncoder;
+    private final ApplicationUserService applicationUserService;
+
+    @Autowired
+    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder,
+                                     ApplicationUserService applicationUserService) {
+        this.passwordEncoder = passwordEncoder;
+        this.applicationUserService = applicationUserService;
+    }
+
+    @Bean
      public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
          http
@@ -39,7 +49,7 @@ public class ApplicationSecurityConfig {
                          .permitAll()
                  )
                  .rememberMe(rememberMe -> rememberMe
-                         .tokenValiditySeconds((int) java.time.Duration.ofDays(21).getSeconds())  // Remember me for 21 days
+                         .tokenValiditySeconds((int) Duration.ofDays(21).getSeconds())  // Remember me for 21 days
                          .key("secureKey")  // Key to encrypt remember me cookie
                  )
                  .logout(logout -> logout
@@ -54,29 +64,17 @@ public class ApplicationSecurityConfig {
          return http.build();
      }
 
-     @Bean
-     public UserDetailsService userDetailsService() {
-
-         UserDetails user1 = User.withUsername("student1")
-                 .password(passwordEncoder().encode("password")) // Encrypt password
-                 .authorities(STUDENT.getGrantedAuthorities())  // STUDENT.getGrantedAuthorities() returns the permissions of the user
-                 .build();
-
-         UserDetails user2 = User.withUsername("admin")
-                 .password(passwordEncoder().encode("admin123"))
-                 .authorities(ADMIN.getGrantedAuthorities())  // ADMIN.getGrantedAuthorities() returns the permissions of the user
-                 .build();
-
-         UserDetails user3 = User.withUsername("admintrainee")
-                 .password(passwordEncoder().encode("adminTrainee123"))
-                 .authorities(ADMINTRAINEE.getGrantedAuthorities())  // ADMINTRAINEE.getGrantedAuthorities() returns the permissions of the user
-                 .build();
-
-         return new InMemoryUserDetailsManager(user1, user2 , user3);
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(10);
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder);
+
+        provider.setUserDetailsService(applicationUserService);
+        return provider;
     }
 }
